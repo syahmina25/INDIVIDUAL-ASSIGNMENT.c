@@ -1,0 +1,64 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<errno.h>
+#include<signal.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<unistd.h>
+#include<string.h>
+
+int main(void)  {
+        void sigint_handler(int sig);
+        int cat;
+        int pipefds[5];
+        char buffer[100];
+        char q[50];
+
+        /*Signal Handler*/
+        if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+                perror("signal SIGINT");
+                exit(1);
+        }
+
+
+        /*Pipe Check*/
+        if(pipe(pipefds) == -1) {
+                perror("Pipe Error\n");
+                exit(EXIT_FAILURE);
+        }
+
+        /*Parent input dialog*/
+        printf("Enter a message for parent process:\n");
+
+        /*Parent input check*/
+        if (fgets(q, sizeof(q), stdin) == NULL) {
+                perror("Parent input error\n");
+        }
+        else {
+                printf("You enter: %s\n", q);
+        }
+
+
+        /*Looping input dialog*/
+        printf("How many cats do you have? :");
+        scanf("%d",&cat);
+
+        /*Writing data to pipe*/
+        printf("Sending message to child...\n");
+        write(pipefds[1], &q, sizeof(q));
+        printf("Done!\n\n");
+
+        /*Reading data to pipe*/
+        printf("Reading message from parent...\n");
+        read(pipefds[0], &buffer, sizeof(buffer));
+        printf("Done!\n\n");
+
+
+}
+        /*Ctrl + C interrupt message*/
+        void sigint_handler(int sig)
+        {
+          printf("\n My cat is cute :) Okay bye!\n");
+        }
+
+
